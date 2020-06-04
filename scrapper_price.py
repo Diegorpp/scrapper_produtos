@@ -1,4 +1,4 @@
-.#!/usr/bin/env python
+#!/usr/bin/env python
 # coding: utf-8
 
 from bs4 import BeautifulSoup
@@ -32,9 +32,11 @@ def obtem_lista_descricao (bs_obj):
         general_price = general_price.find_all('span', class_ = re.compile('PriceUI-[a-zA-Z0-9]+') )[0]
         
         #Prepara os dados de forma estruturada pra irem para uma planilha
-        par.append(general_desc)
-        par.append(general_price.text.replace("R$ ",""))
-        conjunto.append(par)
+        valor = general_price.text.replace("R$ ","").split(',')[0]
+        if (float(valor) > PRECO_CORTE):
+            par.append(general_desc)
+            par.append(valor)
+            conjunto.append(par)
         par = []
     return conjunto
 
@@ -44,7 +46,7 @@ def organiza_dados():
 #Le a planilha com os dados e retorna um DataFrame
 def obtem_modelos(dados_csv):
     csv_modelos = pd.read_csv(dados_csv)
-    return modelos
+    return csv_modelos
 
 #Utilizando modulo csv, mas com pandas é mais facil
 def salva_info_scv(dados):
@@ -78,7 +80,7 @@ def obtem_descricao ():
 def percorre_pagina_americanas(produto,paginas=5):
     dados_produtos = pd.DataFrame()
     for i in range(paginas):
-        url = "https://www.americanas.com.br/busca/"+str(produto)+"galaxy-j1-mini?limite=24&offset="+str(i*24)
+        url = "https://www.americanas.com.br/busca/"+str(produto)+"?limite=24&offset="+str(i*24)
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
         html = requests.get(url, headers=headers)
         bs_obj_new = BeautifulSoup ( html.text, "lxml" )
@@ -97,17 +99,23 @@ def percorre_pagina_americanas(produto,paginas=5):
 
     return dados_produtos
 
+
 #Variaveis de gerencia do script
-ARQUIVO = "modelos_celulares.csv'"
+PRECO_CORTE = 200.0
+ARQUIVO = "Dados.csv"
 
 #em construção
 df_celulares = obtem_modelos(ARQUIVO)
 df_celulares = df_celulares.drop( columns='Device_Price')
-
+todos_dados = pd.DataFrame()
+for celular in df_celulares.itertuples():
+    modelo = celular.deviceModel
+    modelo = modelo.replace(' ','-')
+    todos_dados = todos_dados.append(percorre_pagina_americanas(modelo,1))
+print(todos_dados)
 
 #Coleta os dados dos produtos e atualiza a descrição na tabela.
-todos_dados =  percorre_pagina_americanas()
 todos_dados = todos_dados.rename(columns={0:"Description",1:"Price"})
 
-
 todos_dados.to_csv('dados_produtos.csv')
+
