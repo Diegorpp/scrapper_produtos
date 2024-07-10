@@ -101,21 +101,22 @@ def percorre_pagina_americanas(produto,paginas=5):
 
 
 #Variaveis de gerencia do script
-PRECO_CORTE = 200.0
-ARQUIVO = "Dados.csv"
+if __name__ == '__main__':
+    PRECO_CORTE = 200.0
+    ARQUIVO = "Dados.csv"
 
-#em construção
-df_celulares = obtem_modelos(ARQUIVO)
-df_celulares = df_celulares.drop( columns='Device_Price')
-todos_dados = pd.DataFrame()
-for celular in df_celulares.itertuples():
-    modelo = celular.deviceModel
-    modelo = modelo.replace(' ','-')
-    todos_dados = todos_dados.append(percorre_pagina_americanas(modelo,1))
-print(todos_dados)
+    #em construção
+    df_celulares = obtem_modelos(ARQUIVO)
+    df_celulares = df_celulares.drop( columns='Device_Price')
+    todos_dados = pd.DataFrame()
+    for celular in df_celulares.itertuples():
+        modelo = celular.deviceModel
+        modelo = modelo.replace(' ','-')
+        todos_dados = todos_dados.append(percorre_pagina_americanas(modelo,1))
+    print(todos_dados)
 
-#Coleta os dados dos produtos e atualiza a descrição na tabela.
-todos_dados = todos_dados.rename(columns={0:"Description",1:"Price"})
+    #Coleta os dados dos produtos e atualiza a descrição na tabela.
+    todos_dados = todos_dados.rename(columns={0:"Description",1:"Price"})
 
-todos_dados.to_csv('dados_produtos.csv')
+    todos_dados.to_csv('dados_produtos.csv')
 
